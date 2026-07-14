@@ -6,7 +6,7 @@
 </div>
 
 <div align="center">
-  <a href="[INSERT_VERCEL_LIVE_LINK_HERE]">
+  <a href="https://karndeeps-portfolio.vercel.app/">
     <img src="https://img.shields.io/badge/Live_Website-View_Portfolio-black?style=for-the-badge&logo=vercel" alt="Live Website" />
   </a>
 </div>
