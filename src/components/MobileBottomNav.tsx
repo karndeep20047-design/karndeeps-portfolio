@@ -107,8 +107,11 @@ const sections = [
   },
 ];
 
+import { useNavigate } from "@tanstack/react-router";
+
 export function MobileBottomNav() {
   const [active, setActive] = useState("top");
+  const navigate = useNavigate();
   // When user taps a nav item we lock observer updates until scroll settles
   const isNavigatingRef = useRef(false);
   const navLockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -162,10 +165,18 @@ export function MobileBottomNav() {
     }, 800);
 
     if (id === "top") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (window.location.pathname !== "/") {
+        navigate({ to: "/" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } else {
       const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        navigate({ to: "/", hash: id });
+      }
     }
   };
 

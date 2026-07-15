@@ -164,7 +164,7 @@ export function Hero() {
           <div className="flex flex-col items-start md:items-end gap-4">
             <Reveal delay={0.75}>
               <a
-                href="https://drive.google.com/file/d/17ntrMbfer6u-aXigbDK_HOb3wTWya8QN/view?usp=drive_link"
+                href="https://drive.google.com/file/d/1EA60KsEFsq4LOoxP0i5BP1CQ_YdJVMXd/view?usp=drive_link"
                 target="_blank"
                 rel="noreferrer"
                 className="glass group inline-flex items-center gap-3 rounded-full px-5 py-3 text-sm text-foreground transition-transform hover:scale-[1.02] hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-500"

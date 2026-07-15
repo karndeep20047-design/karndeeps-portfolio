@@ -3,10 +3,10 @@ import { useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 
 const links = [
-  { label: "Work", href: "#work" },
-  { label: "About", href: "#about" },
-  { label: "Stack", href: "#stack" },
-  { label: "Contact", href: "#contact" },
+  { label: "Work", href: "/#work" },
+  { label: "About", href: "/#about" },
+  { label: "Stack", href: "/#stack" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 export function Nav() {
@@ -52,7 +52,7 @@ export function Nav() {
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         className="flex w-full items-center justify-between rounded-full border px-4"
       >
-        <a href="#top" className="flex items-center gap-2 pl-1 font-display text-sm font-medium">
+        <a href="/" className="flex items-center gap-2 pl-1 font-display text-sm font-medium">
           <span className="grid h-6 w-6 place-items-center rounded-full bg-foreground font-mono text-[10px] font-bold text-background">
             K
           </span>

@@ -22,7 +22,7 @@ export function Work() {
               </h2>
             </div>
             <div className="hidden text-right font-mono text-xs uppercase tracking-widest text-muted-foreground sm:block">
-              03<br />projects
+              {String(projects.length).padStart(2, "0")}<br />projects
             </div>
           </div>
         </Reveal>
@@ -188,7 +188,7 @@ function ProjectVisual({ project }: { project: Project }) {
           style={{ transform: "translateZ(24px)" }}
         >
           <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-widest text-foreground/60">
-            <span>{project.n} / 03</span>
+            <span>{project.n} / {String(projects.length).padStart(2, "0")}</span>
             <span className="h-2 w-2 rounded-full bg-foreground/70" />
           </div>
           <div>

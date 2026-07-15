@@ -183,6 +183,71 @@ export const projects: Project[] = [
       { title: "Authentication", caption: "Secure entry backed by Supabase Auth and Row Level Security.", image: "/projects/nexpesa/nexpesa login page.png" },
     ],
   },
+  {
+    slug: "sentinelpay",
+    n: "04",
+    name: "SentinelPay",
+    tag: "AI-Powered Secure Payment API",
+    year: "2026",
+    role: "Solo developer · Backend portfolio project",
+    blurb:
+      "A fintech backend simulating real payment infrastructure — atomic wallet transfers, M-Pesa integration, and real-time AI fraud detection via the Anthropic Claude API.",
+    bullets: [
+      "Atomic transfers using Prisma $transaction() — full rollback if anything fails mid-transfer",
+      "3-rule fraud engine flags suspicious transactions, then calls Claude AI async for risk score and recommendation",
+      "M-Pesa STK Push simulation — webhook credits wallets and logs MPESA_CREDIT transactions",
+      "Full audit logging on every login, transfer, and failed auth attempt with IP tracking",
+      "Swagger UI at /api-docs — interactive docs for all 13 endpoints",
+    ],
+    stack: ["Node.js", "TypeScript", "PostgreSQL", "Docker", "Prisma", "Claude AI", "JWT", "Swagger", "Express"],
+    overview:
+      "A fintech backend simulating real payment infrastructure — atomic wallet transfers, M-Pesa integration, and real-time AI fraud detection via the Anthropic Claude API. Built to mirror what East African payment platforms actually run.",
+    highlights: [
+      { label: "Transfers", value: "Atomic" },
+      { label: "AI Integration", value: "Claude 3" },
+      { label: "Documentation", value: "Swagger UI" },
+      { label: "Hosting", value: "Railway" },
+    ],
+    promoImage: "/projects/sentinelpay/sentinelpay_promo.png",
+    gallery: [
+      { title: "Swagger UI", caption: "Interactive documentation for all endpoints.", image: "/projects/sentinelpay/swagger docs.png" },
+      { title: "Admin Fraud Page", caption: "Reviewing AI-flagged suspicious transactions.", image: "/projects/sentinelpay/admin fraud page.png" },
+      { title: "User Management", caption: "Admin dashboard overview of system users.", image: "/projects/sentinelpay/admin users page.png" },
+      { title: "Authentication", caption: "Secure JWT login and registration flow.", image: "/projects/sentinelpay/auth page.png" },
+      { title: "Docker Containerization", caption: "Full stack booting up via docker-compose.", image: "/projects/sentinelpay/docker logs screenshot.png" }
+    ],
+  },
+  {
+    slug: "secureauth",
+    n: "05",
+    name: "SecureAuth API",
+    tag: "Secure Authentication API",
+    year: "2026",
+    role: "Solo developer · Backend portfolio project",
+    blurb:
+      "A production-style REST API built to demonstrate real-world secure backend engineering — JWT dual-token auth, hashed refresh tokens, and role-based access control.",
+    bullets: [
+      "Refresh tokens stored as bcrypt hashes in PostgreSQL — plain token never persisted",
+      "RBAC middleware separating USER and ADMIN access across protected routes",
+      "Rate limiting on all auth endpoints — brute-force protection out of the box",
+      "docker-compose up --build runs the full stack with zero manual steps",
+    ],
+    stack: ["Node.js", "TypeScript", "PostgreSQL", "Docker", "Prisma", "JWT", "bcrypt", "Express"],
+    overview:
+      "A production-style REST API built to demonstrate real-world secure backend engineering — JWT dual-token auth, hashed refresh tokens, and role-based access control, fully containerised with Docker.",
+    highlights: [
+      { label: "Auth Strategy", value: "JWT Dual-Token" },
+      { label: "Security", value: "Rate Limiting" },
+      { label: "Roles", value: "User / Admin" },
+      { label: "Infrastructure", value: "Docker" },
+    ],
+    promoImage: "/projects/secureauth/secureauth_promo.png",
+    gallery: [
+      { title: "Postman API Testing", caption: "Successful login response returning JWT access and refresh tokens.", image: "/projects/secureauth/postman ss.png" },
+      { title: "Database Security", caption: "Refresh tokens securely stored as bcrypt hashes in Prisma Studio.", image: "/projects/secureauth/prisma ss.png" },
+      { title: "Docker Deployment", caption: "Automated container startup, database migrations, and admin seeding.", image: "/projects/secureauth/docker ss.png" }
+    ],
+  },
 ];
 
 export function getProject(slug: string) {
