@@ -43,24 +43,36 @@ export function ScrollPath({ targetRef, count }: Props) {
 
   const pathLength = useTransform(smooth, [0, 1], [0, 1]);
 
-  // Derive dot cx/cy by walking the path at the current progress fraction.
-  // This operates in SVG user-unit space — always correct regardless of scale.
-  const dotCx = useTransform(smooth, (v) => {
-    const p = pathRef.current;
-    if (!p) return 0;
-    const len = p.getTotalLength();
-    return p.getPointAtLength(v * len).x;
-  });
+  const dotRef = useRef<SVGCircleElement>(null);
+  const haloRef = useRef<SVGCircleElement>(null);
 
-  const dotCy = useTransform(smooth, (v) => {
-    const p = pathRef.current;
-    if (!p) return 0;
-    const len = p.getTotalLength();
-    return p.getPointAtLength(v * len).y;
-  });
+  useEffect(() => {
+    const updateDot = () => {
+      const p = pathRef.current;
+      const dot = dotRef.current;
+      const halo = haloRef.current;
+      if (!p || !dot || !halo) return;
 
-  const { w, h } = size;
-  if (!w || !h) {
+      const len = p.getTotalLength();
+      if (!len) return;
+
+      const pt = p.getPointAtLength(smooth.get() * len);
+      dot.setAttribute("cx", pt.x.toString());
+      dot.setAttribute("cy", pt.y.toString());
+      halo.setAttribute("cx", pt.x.toString());
+      halo.setAttribute("cy", pt.y.toString());
+    };
+
+    // Update immediately to catch initial state or window resize
+    updateDot();
+
+    // Subscribe to scroll progress
+    const unsub = smooth.on("change", updateDot);
+    return () => unsub();
+  }, [smooth, size.w, size.h, count]); // re-run effect if dimensions or count change
+
+  const { w: width, h: height } = size;
+  if (!width || !height) {
     return (
       <svg
         ref={svgRef}
@@ -72,11 +84,11 @@ export function ScrollPath({ targetRef, count }: Props) {
 
   // Build a smooth serpentine path with cubic beziers that weaves left
   // and right across the section. One "swing" per project card.
-  const cx = w / 2;
-  const amp = Math.min(w * 0.42, 380); // horizontal swing
-  const topPad = h * 0.05;
-  const bottomPad = h * 0.05;
-  const usable = h - topPad - bottomPad;
+  const cx = width / 2;
+  const amp = Math.min(width * 0.42, 380); // horizontal swing
+  const topPad = height * 0.05;
+  const bottomPad = height * 0.05;
+  const usable = height - topPad - bottomPad;
 
   const anchors: { x: number; y: number }[] = [];
   for (let i = 0; i <= count; i++) {
@@ -101,7 +113,7 @@ export function ScrollPath({ targetRef, count }: Props) {
     <svg
       ref={svgRef}
       aria-hidden
-      viewBox={`0 0 ${w} ${h}`}
+      viewBox={`0 0 ${width} ${height}`}
       width="100%"
       height="100%"
       className="pointer-events-none absolute inset-0"
@@ -146,20 +158,18 @@ export function ScrollPath({ targetRef, count }: Props) {
       />
 
       {/* Outer glow halo */}
-      <motion.circle
+      <circle
+        ref={haloRef}
         r={12}
         fill="var(--foreground)"
         fillOpacity={0.15}
-        cx={dotCx}
-        cy={dotCy}
       />
 
       {/* Solid head dot — positioned by getPointAtLength, always on the path */}
-      <motion.circle
+      <circle
+        ref={dotRef}
         r={5}
         fill="var(--foreground)"
-        cx={dotCx}
-        cy={dotCy}
       />
     </svg>
   );

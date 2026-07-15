@@ -14,7 +14,6 @@ export function Gallery3D({ items, name }: { items: Item[]; name: string }) {
   useEffect(() => setMounted(true), []);
   const [cardW, setCardW] = useState(360);
   const x = useMotionValue(0);
-  const smoothX = useSpring(x, { stiffness: 180, damping: 28, mass: 0.6 });
 
   // Responsive card width - optimized for 16:9 landscape
   useEffect(() => {
@@ -37,6 +36,7 @@ export function Gallery3D({ items, name }: { items: Item[]; name: string }) {
       type: "spring",
       stiffness: 160,
       damping: 26,
+      mass: 0.6
     });
     return controls.stop;
   }, [index, step, x]);
@@ -62,10 +62,10 @@ export function Gallery3D({ items, name }: { items: Item[]; name: string }) {
         style={{ perspective: "1600px" }}
       >
         <motion.div
-          className="flex items-center will-change-transform"
+          className="flex items-center will-change-transform cursor-grab active:cursor-grabbing"
           style={{
             gap: `${gap}px`,
-            x: smoothX,
+            x: x,
             paddingLeft: `calc(50% - ${cardW / 2}px)`,
             paddingRight: `calc(50% - ${cardW / 2}px)`,
             transformStyle: "preserve-3d",
@@ -76,10 +76,23 @@ export function Gallery3D({ items, name }: { items: Item[]; name: string }) {
             right: 0,
           }}
           dragElastic={0.12}
+          dragMomentum={false}
           onDragEnd={(_, info) => {
             const projected = x.get() + info.velocity.x * 0.15;
             const nearest = Math.round(-projected / step);
-            go(nearest);
+            const clamped = Math.max(0, Math.min(items.length - 1, nearest));
+            
+            if (clamped === index) {
+              // Force snap back if we didn't drag far enough to change index
+              animate(x, -index * step, {
+                type: "spring",
+                stiffness: 160,
+                damping: 26,
+                mass: 0.6
+              });
+            } else {
+              go(clamped);
+            }
           }}
         >
           {items.map((item, i) => (
@@ -91,7 +104,7 @@ export function Gallery3D({ items, name }: { items: Item[]; name: string }) {
               total={items.length}
               cardW={cardW}
               step={step}
-              smoothX={smoothX}
+              mX={x}
               onClick={() => go(i)}
               onZoom={() => setIsZoomed(true)}
               isActive={i === index}
@@ -252,7 +265,7 @@ function Card({
   total,
   cardW,
   step,
-  smoothX,
+  mX,
   onClick,
   onZoom,
   isActive,
@@ -263,13 +276,13 @@ function Card({
   total: number;
   cardW: number;
   step: number;
-  smoothX: any;
+  mX: any;
   onClick: () => void;
   onZoom: () => void;
   isActive: boolean;
 }) {
   // Distance from center in "steps"
-  const offset = useTransform(smoothX, (v: number) => (v + i * step) / step);
+  const offset = useTransform(mX, (v: number) => (v + i * step) / step);
   // Map to 3D rotation, translation, scale
   const rotateY = useTransform(offset, (o) => Math.max(-55, Math.min(55, -o * 35)));
   const translateZ = useTransform(offset, (o) => -Math.abs(o) * 140);

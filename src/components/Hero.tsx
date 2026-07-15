@@ -102,7 +102,7 @@ export function Hero() {
     <section
       id="top"
       ref={ref}
-      className="relative flex min-h-[100svh] flex-col justify-between overflow-hidden px-6 pb-28 pt-32 md:px-10 md:pb-10 md:pt-40"
+      className="relative flex min-h-[100svh] flex-col justify-between overflow-hidden px-6 pb-36 pt-32 md:px-10 md:pb-10 md:pt-40"
     >
       {/* Flowing gradient background */}
       <div className="hero-bg" aria-hidden>
@@ -123,18 +123,7 @@ export function Hero() {
         style={{ opacity, willChange: "opacity" }}
         className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center"
       >
-        <Reveal>
-          <div className="md:hidden glass mb-16 inline-flex w-fit items-center gap-2.5 rounded-full px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-widest text-foreground/70 hover:bg-foreground/10 cursor-default">
-            <motion.span
-              animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              className="text-foreground/60 text-[10px] flex items-center justify-center leading-none"
-            >
-              ✦
-            </motion.span>
-            1°17'S 36°49'E · Nairobi, KE
-          </div>
-        </Reveal>
+
 
         <h1 className="relative font-display text-[15vw] font-medium leading-[0.9] tracking-tighter md:text-[9vw] w-fit">
           <FloatingArrow
@@ -172,17 +161,32 @@ export function Hero() {
             marketplaces to payment-integrated dashboards. I care about clean systems, fast
             interfaces, and the last 5% of polish.
           </Reveal>
-          <Reveal delay={0.75}>
-            <a
-              href="#work"
-              className="glass group inline-flex items-center gap-3 rounded-full px-5 py-3 text-sm text-foreground transition-transform hover:scale-[1.02]"
-            >
-              See selected work
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-foreground text-background transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-                ↗
-              </span>
-            </a>
-          </Reveal>
+          <div className="flex flex-col items-start md:items-end gap-4">
+            <Reveal delay={0.75}>
+              <a
+                href="https://drive.google.com/file/d/17ntrMbfer6u-aXigbDK_HOb3wTWya8QN/view?usp=drive_link"
+                target="_blank"
+                rel="noreferrer"
+                className="glass group inline-flex items-center gap-3 rounded-full px-5 py-3 text-sm text-foreground transition-transform hover:scale-[1.02] hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-500"
+              >
+                Check out my CV
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-foreground text-background transition-transform group-hover:bg-orange-500 group-hover:text-white group-hover:translate-y-0.5">
+                  <span className="transition-transform duration-300 group-hover:rotate-45 leading-none">↘</span>
+                </span>
+              </a>
+            </Reveal>
+            <Reveal delay={0.85}>
+              <a
+                href="#work"
+                className="glass group inline-flex items-center gap-3 rounded-full px-5 py-3 text-sm text-foreground transition-transform hover:scale-[1.02] hover:border-blue-500/50 hover:bg-blue-500/10 hover:text-blue-500"
+              >
+                See selected work
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-foreground text-background transition-transform group-hover:bg-blue-500 group-hover:text-white group-hover:-translate-y-0.5">
+                  <span className="transition-transform duration-300 group-hover:-rotate-45 leading-none">↗</span>
+                </span>
+              </a>
+            </Reveal>
+          </div>
         </div>
       </motion.div>
 
