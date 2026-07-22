@@ -1,4 +1,5 @@
 import { sendTelegramAlert } from "@/lib/telegram";
+import { Redis } from "@upstash/redis";
 
 export interface SessionRecord {
   id: string;
@@ -30,8 +31,52 @@ export interface SessionRecord {
   notifiedSummary?: boolean;
 }
 
-// In-memory store
+// Upstash Redis client with fallback to in-memory Map
+let redis: Redis | null = null;
+if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+  redis = new Redis({
+    url: process.env.KV_REST_API_URL,
+    token: process.env.KV_REST_API_TOKEN,
+  });
+} else if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+}
+
+// In-memory fallback
 export const sessionsStore = new Map<string, SessionRecord>();
+
+// Save session
+export async function saveSession(session: SessionRecord) {
+  sessionsStore.set(session.sessionKey, session);
+  if (redis) {
+    try {
+      await redis.set(`session:${session.sessionKey}`, session);
+      await redis.sadd("sessions_keys", session.sessionKey);
+    } catch (err) {
+      console.error("Redis save session error:", err);
+    }
+  }
+}
+
+// Get all sessions from Redis (or memory fallback)
+export async function getAllSessions(): Promise<SessionRecord[]> {
+  if (redis) {
+    try {
+      const keys = await redis.smembers("sessions_keys");
+      if (keys && keys.length > 0) {
+        const sessionKeys = keys.map((k) => `session:${k}`);
+        const records = await redis.mget<SessionRecord[]>(...sessionKeys);
+        return records.filter(Boolean);
+      }
+    } catch (err) {
+      console.error("Redis get all sessions error:", err);
+    }
+  }
+  return Array.from(sessionsStore.values());
+}
 
 // Helper to format YYYY-MM-DD
 export function getFormattedDate(timestamp: number): string {
@@ -112,7 +157,17 @@ export async function processTrackEvent(req: Request) {
     }
 
     const now = Date.now();
-    let session = sessionsStore.get(sessionKey);
+    
+    // Fetch existing session from Redis or Memory
+    let session: SessionRecord | null = null;
+    if (redis) {
+      try {
+        session = await redis.get<SessionRecord>(`session:${sessionKey}`);
+      } catch (e) {}
+    }
+    if (!session) {
+      session = sessionsStore.get(sessionKey) || null;
+    }
 
     if (!session) {
       session = {
@@ -138,7 +193,7 @@ export async function processTrackEvent(req: Request) {
         events: [],
         createdAt: now,
       };
-      sessionsStore.set(sessionKey, session);
+      await saveSession(session);
 
       // Trigger Telegram notification for ALL new visitor sessions (Recruiter or Normal Visitor)
       let msg = recruiterRef
@@ -162,6 +217,7 @@ export async function processTrackEvent(req: Request) {
       if (scrollDepth > session.maxScrollDepth) {
         session.maxScrollDepth = scrollDepth;
       }
+      await saveSession(session);
     }
 
     // Log event to session timeline (excluding simple HEARTBEAT loops)
@@ -172,6 +228,7 @@ export async function processTrackEvent(req: Request) {
         pageUrl,
         timestamp: now,
       });
+      await saveSession(session);
 
       // Instant notifications for high-priority actions
       if (eventType === "CV_DOWNLOAD") {

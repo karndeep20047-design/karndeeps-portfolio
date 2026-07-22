@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { sessionsStore, getFormattedDate } from "@/lib/telemetry";
+import { getAllSessions, getFormattedDate } from "@/lib/telemetry";
 import { verifyAdminAuth } from "./login";
 
 export const Route = createFileRoute("/api/admin/analytics")({
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/admin/analytics")({
 
         const now = Date.now();
         const activeThreshold = 30000; // Active within last 30s
-        const allSessions = Array.from(sessionsStore.values());
+        const allSessions = await getAllSessions();
 
         // Extract available unique dates
         const availableDates = Array.from(
