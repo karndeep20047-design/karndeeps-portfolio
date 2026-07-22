@@ -99,7 +99,7 @@ function AdminAnalytics() {
       <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
         <form
           onSubmit={handleLogin}
-          className="w-full max-w-sm rounded-2xl border border-border/80 bg-card p-8 shadow-2xl backdrop-blur-xl"
+          className="w-full max-w-sm rounded-2xl border border-border/80 bg-card p-6 md:p-8 shadow-2xl backdrop-blur-xl"
         >
           <div className="mb-6 text-center">
             <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-primary/10 text-primary">
@@ -144,23 +144,23 @@ function AdminAnalytics() {
   const isToday = selectedDate === new Date().toISOString().split("T")[0];
 
   return (
-    <div className="min-h-screen bg-background p-6 md:p-12 text-foreground font-sans">
+    <div className="min-h-screen bg-background p-4 md:p-12 text-foreground font-sans">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <div className="mb-6 md:mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Live Telemetry
             </div>
-            <h1 className="font-display text-3xl md:text-5xl font-medium tracking-tight mt-1">
-              Visitor & Recruiter Analytics
+            <h1 className="font-display text-2.5xl md:text-5xl font-medium tracking-tight mt-1">
+              Visitor Analytics
             </h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {/* Date Filter Dropdown */}
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-mono">
-              <Calendar className="h-4 w-4 text-primary" />
+              <Calendar className="h-4 w-4 text-primary shrink-0" />
               <select
                 value={selectedDate}
                 onChange={(e) => handleDateChange(e.target.value)}
@@ -185,9 +185,9 @@ function AdminAnalytics() {
         </div>
 
         {/* Metrics Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-10">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 mb-8 md:mb-10">
           <MetricCard
-            title={isToday ? "Unique Visitors Today" : `Unique Visitors (${selectedDate})`}
+            title={isToday ? "Visitors Today" : `Visitors (${selectedDate})`}
             value={metrics.totalVisitors || 0}
             icon={Users}
             subtitle={`${metrics.totalSessions || 0} Total Visits`}
@@ -213,8 +213,8 @@ function AdminAnalytics() {
           />
         </div>
 
-        {/* Visitors & Companies Table */}
-        <div className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xl">
+        {/* Desktop Table View */}
+        <div className="hidden md:block rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xl">
           <div className="border-b border-border/80 px-6 py-4 flex items-center justify-between">
             <div>
               <h2 className="font-display text-lg font-medium">
@@ -364,6 +364,122 @@ function AdminAnalytics() {
             </table>
           </div>
         </div>
+
+        {/* Mobile Card-Based Responsive View */}
+        <div className="block md:hidden space-y-3">
+          <div className="flex items-center justify-between px-1 mb-2">
+            <h2 className="font-display text-base font-medium">Visitor Log ({selectedDate})</h2>
+            <span className="font-mono text-xs text-muted-foreground">
+              {groupedVisitors.length} Visitors
+            </span>
+          </div>
+
+          {groupedVisitors.length === 0 ? (
+            <div className="rounded-2xl border border-border/80 bg-card p-6 text-center text-xs text-muted-foreground">
+              No visitor activity recorded for {selectedDate}.
+            </div>
+          ) : (
+            groupedVisitors.map((v: any) => {
+              const isExpanded = expandedVisitor === v.groupKey;
+              const formatDuration = (sec: number) => {
+                if (sec < 60) return `${sec}s`;
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                return `${m}m ${s}s`;
+              };
+
+              return (
+                <div
+                  key={v.groupKey}
+                  className="rounded-2xl border border-border/80 bg-card p-4 space-y-3 text-xs"
+                >
+                  <div
+                    onClick={() => setExpandedVisitor(isExpanded ? null : v.groupKey)}
+                    className="flex items-center justify-between cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      {v.recruiterRef ? (
+                        <span className="rounded-md bg-orange-500/10 px-2 py-0.5 font-semibold text-orange-500 border border-orange-500/20">
+                          🏢 {v.recruiterRef}
+                        </span>
+                      ) : (
+                        <span className="font-semibold text-foreground">
+                          👤 {v.visitorToken.substring(0, 8)}...
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <span>{new Date(v.lastActiveTime).toLocaleTimeString()}</span>
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/60 text-muted-foreground">
+                    <div>
+                      <span className="block text-[10px] uppercase font-mono tracking-wider">Location</span>
+                      <span className="text-foreground font-medium">{v.location}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] uppercase font-mono tracking-wider">Total Time</span>
+                      <span className="text-primary font-semibold">{formatDuration(v.totalDurationSec)}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] uppercase font-mono tracking-wider">Device</span>
+                      <span>{v.device} ({v.browser})</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] uppercase font-mono tracking-wider">Visits / Scroll</span>
+                      <span>{v.sessionsCount} visit{v.sessionsCount > 1 ? "s" : ""} ({v.maxScrollDepth}%)</span>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="pt-2 border-t border-border/60 space-y-3">
+                      <h4 className="font-semibold text-xs text-foreground">
+                        Timeline Stream ({v.sessions.length} visit{v.sessions.length > 1 ? "s" : ""})
+                      </h4>
+
+                      {v.sessions.map((session: any, sIdx: number) => (
+                        <div
+                          key={session.id || sIdx}
+                          className="rounded-xl border border-border/60 bg-muted/30 p-2.5 space-y-1.5"
+                        >
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-foreground">
+                            <span>Visit #{v.sessions.length - sIdx} ({new Date(session.createdAt).toLocaleTimeString()})</span>
+                            <span>{formatDuration(session.durationSec)}</span>
+                          </div>
+
+                          <div className="space-y-1">
+                            {session.events.map((e: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="flex flex-col text-[11px] border-l-2 border-primary/40 pl-2 py-0.5"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-primary">{e.eventType}</span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {new Date(e.timestamp).toLocaleTimeString()}
+                                  </span>
+                                </div>
+                                <span className="text-muted-foreground text-[10px] truncate">
+                                  Path: {e.pageUrl}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );
@@ -384,20 +500,22 @@ function MetricCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border bg-card p-6 shadow-md transition-all ${
+      className={`rounded-2xl border bg-card p-4 md:p-6 shadow-md transition-all ${
         highlight ? "border-emerald-500/50 ring-1 ring-emerald-500/20" : "border-border/80"
       }`}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+        <span className="text-[10px] md:text-xs font-mono uppercase tracking-wider text-muted-foreground truncate">
           {title}
         </span>
-        <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
-          <Icon className="h-5 w-5" />
+        <div className="grid h-7 w-7 md:h-9 md:w-9 place-items-center rounded-xl bg-primary/10 text-primary shrink-0">
+          <Icon className="h-4 w-4 md:h-5 md:w-5" />
         </div>
       </div>
-      <div className="mt-3 font-display text-3xl font-semibold tracking-tight">{value}</div>
-      <div className="mt-1 text-xs text-muted-foreground">{subtitle}</div>
+      <div className="mt-2 md:mt-3 font-display text-2xl md:text-3xl font-semibold tracking-tight">
+        {value}
+      </div>
+      <div className="mt-1 text-[10px] md:text-xs text-muted-foreground truncate">{subtitle}</div>
     </div>
   );
 }

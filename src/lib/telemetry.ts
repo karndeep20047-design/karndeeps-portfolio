@@ -30,7 +30,7 @@ export interface SessionRecord {
   notifiedSummary?: boolean;
 }
 
-// In-memory store + KV persistence fallback
+// In-memory store
 export const sessionsStore = new Map<string, SessionRecord>();
 
 // Helper to format YYYY-MM-DD
@@ -38,6 +38,8 @@ export function getFormattedDate(timestamp: number): string {
   const d = new Date(timestamp);
   return d.toISOString().split("T")[0];
 }
+
+const DASHBOARD_LINK = "\n\n📊 [Open Admin Dashboard](https://karndeeps-portfolio.vercel.app/admin/analytics)";
 
 export async function processTrackEvent(req: Request) {
   try {
@@ -114,6 +116,7 @@ export async function processTrackEvent(req: Request) {
         msg += `📍 *Location:* ${location}\n`;
         msg += `💻 *Device:* ${device} (${browser} on ${os})\n`;
         msg += `🌐 *Entry Page:* \`${pageUrl}\``;
+        msg += DASHBOARD_LINK;
         sendTelegramAlert(msg);
       }
     } else {
@@ -141,6 +144,7 @@ export async function processTrackEvent(req: Request) {
         if (session.recruiterRef) msg += `🏢 *Company:* \`${session.recruiterRef}\`\n`;
         msg += `📍 *Location:* ${location}\n`;
         msg += `💻 *Device:* ${device} (${browser})`;
+        msg += DASHBOARD_LINK;
         sendTelegramAlert(msg);
       } else if (eventType === "CONTACT_SUBMIT") {
         let msg = `📩 *Contact Form Submitted!*\n\n`;
@@ -148,11 +152,13 @@ export async function processTrackEvent(req: Request) {
         if (eventData?.email) msg += `📧 *Email:* ${eventData.email}\n`;
         if (eventData?.company) msg += `🏢 *Company:* ${eventData.company}\n`;
         msg += `📍 *Location:* ${location}`;
+        msg += DASHBOARD_LINK;
         sendTelegramAlert(msg);
       } else if (eventType === "GITHUB_CLICK") {
         let msg = `🐙 *GitHub Link Clicked*\n\n`;
         if (session.recruiterRef) msg += `🏢 *Company:* \`${session.recruiterRef}\`\n`;
         msg += `📍 *Location:* ${location}`;
+        msg += DASHBOARD_LINK;
         sendTelegramAlert(msg);
       }
     }
