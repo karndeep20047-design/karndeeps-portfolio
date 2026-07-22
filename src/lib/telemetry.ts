@@ -69,14 +69,38 @@ export async function processTrackEvent(req: Request) {
       });
     }
 
-    // Geolocation from Vercel / Cloudflare headers
+    // Geolocation from Vercel / Cloudflare edge headers
     const clientIp =
-      req.headers.get("x-forwarded-for")?.split(",")[0] ||
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("x-real-ip") ||
       "127.0.0.1";
-    const country = req.headers.get("x-vercel-ip-country") || "Unknown Country";
-    const city = req.headers.get("x-vercel-ip-city") || "Unknown City";
-    const location = `${city}, ${country}`;
+    const country = req.headers.get("x-vercel-ip-country") || "";
+    const region = req.headers.get("x-vercel-ip-country-region") || "";
+    const city = req.headers.get("x-vercel-ip-city") || "";
+    let latitude = req.headers.get("x-vercel-ip-latitude") || "";
+    let longitude = req.headers.get("x-vercel-ip-longitude") || "";
+
+    // If Vercel lat/long headers aren't present (e.g. standard Vercel hobby tier), query IP API
+    if ((!latitude || !longitude) && clientIp !== "127.0.0.1" && !clientIp.startsWith("::")) {
+      try {
+        const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?fields=status,country,regionName,city,lat,lon,isp,org`);
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData.status === "success") {
+            latitude = geoData.lat;
+            longitude = geoData.lon;
+          }
+        }
+      } catch (err) {
+        // Fallback silently if rate limited
+      }
+    }
+
+    let location = [city, region, country].filter(Boolean).join(", ") || "Unknown Location";
+    if (latitude && longitude) {
+      const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      location += ` ([📍 View Map](${mapsUrl}))`;
+    }
 
     const now = Date.now();
     let session = sessionsStore.get(sessionKey);
