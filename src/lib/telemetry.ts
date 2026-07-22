@@ -70,33 +70,41 @@ export async function processTrackEvent(req: Request) {
     }
 
     // Geolocation from Vercel / Cloudflare edge headers
-    const clientIp =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      "127.0.0.1";
-    const country = req.headers.get("x-vercel-ip-country") || "";
-    const region = req.headers.get("x-vercel-ip-country-region") || "";
-    const city = req.headers.get("x-vercel-ip-city") || "";
+    const rawIp = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "";
+    const clientIp = rawIp.split(",")[0]?.trim() || "127.0.0.1";
+
+    let country = req.headers.get("x-vercel-ip-country") || "";
+    let region = req.headers.get("x-vercel-ip-country-region") || "";
+    let city = req.headers.get("x-vercel-ip-city") || "";
     let latitude = req.headers.get("x-vercel-ip-latitude") || "";
     let longitude = req.headers.get("x-vercel-ip-longitude") || "";
 
-    // If Vercel lat/long headers aren't present (e.g. standard Vercel hobby tier), query IP API
-    if ((!latitude || !longitude) && clientIp !== "127.0.0.1" && !clientIp.startsWith("::")) {
+    // Check if IP is public and valid
+    const isPublicIp = clientIp && clientIp !== "127.0.0.1" && !clientIp.startsWith("::") && !clientIp.startsWith("10.") && !clientIp.startsWith("192.168.");
+
+    // Query high-precision HTTPS IP Geolocation API if Vercel headers are missing or incomplete
+    if (isPublicIp && (!latitude || !city || city === "Unknown City")) {
       try {
-        const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?fields=status,country,regionName,city,lat,lon,isp,org`);
+        const geoRes = await fetch(`https://ipwho.is/${clientIp}`);
         if (geoRes.ok) {
           const geoData = await geoRes.json();
-          if (geoData.status === "success") {
-            latitude = geoData.lat;
-            longitude = geoData.lon;
+          if (geoData.success) {
+            city = geoData.city || city;
+            region = geoData.region || region;
+            country = geoData.country || country;
+            latitude = geoData.latitude ? String(geoData.latitude) : latitude;
+            longitude = geoData.longitude ? String(geoData.longitude) : longitude;
           }
         }
       } catch (err) {
-        // Fallback silently if rate limited
+        // Silent fallback
       }
     }
 
-    let location = [city, region, country].filter(Boolean).join(", ") || "Unknown Location";
+    // Clean up city/region/country formatting
+    const locationParts = [city, region, country].filter(Boolean);
+    let location = locationParts.length > 0 ? locationParts.join(", ") : "Unknown Location";
+
     if (latitude && longitude) {
       const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
       location += ` ([📍 View Map](${mapsUrl}))`;
