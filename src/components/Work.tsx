@@ -4,6 +4,7 @@ import { Reveal } from "./Reveal";
 import { ScrollPath } from "./ScrollPath";
 import { projects, type Project } from "@/lib/projects";
 import { usePageTransition } from "./PageTransition";
+import { trackEvent } from "@/lib/useTracker";
 
 export function Work() {
   const stackRef = useRef<HTMLDivElement>(null);
@@ -49,6 +50,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 
   const handleOpen = (e: React.MouseEvent) => {
     e.preventDefault();
+    trackEvent("PROJECT_OPEN", { slug: project.slug, name: project.name });
     const rect = cardRef.current?.getBoundingClientRect();
     const origin = rect
       ? { x: (rect.left + rect.width / 2) / window.innerWidth, y: (rect.top + rect.height / 2) / window.innerHeight }

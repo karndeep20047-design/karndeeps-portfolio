@@ -131,9 +131,11 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 import { PageTransitionProvider } from "@/components/PageTransition";
+import { useTracker } from "@/lib/useTracker";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useTracker();
 
   return (
     <QueryClientProvider client={queryClient}>

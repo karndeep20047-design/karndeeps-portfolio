@@ -1,11 +1,12 @@
 import { Reveal } from "./Reveal";
 import { useState } from "react";
+import { trackEvent } from "@/lib/useTracker";
 
 const links = [
-  { label: "Email", value: "karndeep20047@gmail.com", href: "mailto:karndeep20047@gmail.com" },
-  { label: "Phone", value: "+254 740 350 866", href: "tel:+254740350866" },
-  { label: "GitHub", value: "@karndeep20047-design", href: "https://github.com/karndeep20047-design" },
-  { label: "Location", value: "Nairobi, Kenya", href: "#" },
+  { label: "Email", value: "karndeep20047@gmail.com", href: "mailto:karndeep20047@gmail.com", event: "EMAIL_CLICK" },
+  { label: "Phone", value: "+254 740 350 866", href: "tel:+254740350866", event: "PHONE_CLICK" },
+  { label: "GitHub", value: "@karndeep20047-design", href: "https://github.com/karndeep20047-design", event: "GITHUB_CLICK" },
+  { label: "Location", value: "Nairobi, Kenya", href: "#", event: null },
 ];
 
 export function Contact() {
@@ -41,6 +42,7 @@ export function Contact() {
       const data = await response.json();
 
       if (response.status === 200 && data.success) {
+        trackEvent("CONTACT_SUBMIT", { name: object.name, email: object.email, company: object.company });
         setStatus("success");
         form.reset();
         setTimeout(() => setStatus("idle"), 5000); // Reset after 5 seconds
@@ -144,7 +146,15 @@ export function Contact() {
                 <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                   {l.label}
                 </span>
-                <a href={l.href} target={l.label === "GitHub" ? "_blank" : undefined} rel="noreferrer" className="link-hover w-fit text-[15px] text-foreground/90">
+                <a
+                  href={l.href}
+                  target={l.label === "GitHub" ? "_blank" : undefined}
+                  rel="noreferrer"
+                  onClick={() => {
+                    if (l.label === "GitHub") trackEvent("GITHUB_CLICK");
+                  }}
+                  className="link-hover w-fit text-[15px] text-foreground/90"
+                >
                   {l.value}
                 </a>
               </div>

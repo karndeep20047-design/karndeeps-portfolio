@@ -11,6 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkSlugRouteImport } from './routes/work.$slug'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as ApiAnalyticsTrackRouteImport } from './routes/api/analytics/track'
+import { Route as ApiAdminLoginRouteImport } from './routes/api/admin/login'
+import { Route as ApiAdminAnalyticsRouteImport } from './routes/api/admin/analytics'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +26,86 @@ const WorkSlugRoute = WorkSlugRouteImport.update({
   path: '/work/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/admin/analytics',
+  path: '/admin/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAnalyticsTrackRoute = ApiAnalyticsTrackRouteImport.update({
+  id: '/api/analytics/track',
+  path: '/api/analytics/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminLoginRoute = ApiAdminLoginRouteImport.update({
+  id: '/api/admin/login',
+  path: '/api/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminAnalyticsRoute = ApiAdminAnalyticsRouteImport.update({
+  id: '/api/admin/analytics',
+  path: '/api/admin/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/work/$slug': typeof WorkSlugRoute
+  '/api/admin/analytics': typeof ApiAdminAnalyticsRoute
+  '/api/admin/login': typeof ApiAdminLoginRoute
+  '/api/analytics/track': typeof ApiAnalyticsTrackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/work/$slug': typeof WorkSlugRoute
+  '/api/admin/analytics': typeof ApiAdminAnalyticsRoute
+  '/api/admin/login': typeof ApiAdminLoginRoute
+  '/api/analytics/track': typeof ApiAnalyticsTrackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/work/$slug': typeof WorkSlugRoute
+  '/api/admin/analytics': typeof ApiAdminAnalyticsRoute
+  '/api/admin/login': typeof ApiAdminLoginRoute
+  '/api/analytics/track': typeof ApiAnalyticsTrackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/work/$slug'
+  fullPaths:
+    | '/'
+    | '/admin/analytics'
+    | '/work/$slug'
+    | '/api/admin/analytics'
+    | '/api/admin/login'
+    | '/api/analytics/track'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/work/$slug'
-  id: '__root__' | '/' | '/work/$slug'
+  to:
+    | '/'
+    | '/admin/analytics'
+    | '/work/$slug'
+    | '/api/admin/analytics'
+    | '/api/admin/login'
+    | '/api/analytics/track'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin/analytics'
+    | '/work/$slug'
+    | '/api/admin/analytics'
+    | '/api/admin/login'
+    | '/api/analytics/track'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   WorkSlugRoute: typeof WorkSlugRoute
+  ApiAdminAnalyticsRoute: typeof ApiAdminAnalyticsRoute
+  ApiAdminLoginRoute: typeof ApiAdminLoginRoute
+  ApiAnalyticsTrackRoute: typeof ApiAnalyticsTrackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +124,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/admin/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/analytics/track': {
+      id: '/api/analytics/track'
+      path: '/api/analytics/track'
+      fullPath: '/api/analytics/track'
+      preLoaderRoute: typeof ApiAnalyticsTrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/login': {
+      id: '/api/admin/login'
+      path: '/api/admin/login'
+      fullPath: '/api/admin/login'
+      preLoaderRoute: typeof ApiAdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/analytics': {
+      id: '/api/admin/analytics'
+      path: '/api/admin/analytics'
+      fullPath: '/api/admin/analytics'
+      preLoaderRoute: typeof ApiAdminAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   WorkSlugRoute: WorkSlugRoute,
+  ApiAdminAnalyticsRoute: ApiAdminAnalyticsRoute,
+  ApiAdminLoginRoute: ApiAdminLoginRoute,
+  ApiAnalyticsTrackRoute: ApiAnalyticsTrackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
