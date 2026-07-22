@@ -111,6 +111,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+import { SpeedInsights } from "@vercel/speed-insights/react";
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
@@ -124,6 +126,7 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        <SpeedInsights />
         <Scripts />
       </body>
     </html>
