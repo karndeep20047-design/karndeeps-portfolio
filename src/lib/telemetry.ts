@@ -107,18 +107,19 @@ export async function processTrackEvent(req: Request) {
       };
       sessionsStore.set(sessionKey, session);
 
-      // Trigger instant alert for recruiter links
-      if (recruiterRef) {
-        let msg = `🎯 *Recruiter Visit Detected!*\n\n`;
-        msg += `🏢 *Company/Ref:* \`${recruiterRef}\`\n`;
-        if (jobTag) msg += `💼 *Job:* \`${jobTag}\`\n`;
-        if (sourceTag) msg += `🔗 *Source:* \`${sourceTag}\`\n`;
-        msg += `📍 *Location:* ${location}\n`;
-        msg += `💻 *Device:* ${device} (${browser} on ${os})\n`;
-        msg += `🌐 *Entry Page:* \`${pageUrl}\``;
-        msg += DASHBOARD_LINK;
-        sendTelegramAlert(msg);
-      }
+      // Trigger Telegram notification for ALL new visitor sessions (Recruiter or Normal Visitor)
+      let msg = recruiterRef
+        ? `🎯 *Recruiter Visit Detected!*\n\n🏢 *Company/Ref:* \`${recruiterRef}\`\n`
+        : `👀 *New Portfolio Visitor!*\n\n`;
+
+      if (jobTag) msg += `💼 *Job:* \`${jobTag}\`\n`;
+      if (sourceTag) msg += `🔗 *Source:* \`${sourceTag}\`\n`;
+      msg += `📍 *Location:* ${location}\n`;
+      msg += `💻 *Device:* ${device} (${browser} on ${os})\n`;
+      msg += `🌐 *Page:* \`${pageUrl}\``;
+      msg += DASHBOARD_LINK;
+
+      sendTelegramAlert(msg);
     } else {
       // Update session metrics
       session.exitPage = pageUrl || session.exitPage;
