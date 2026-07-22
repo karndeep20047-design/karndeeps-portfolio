@@ -119,7 +119,7 @@ export async function processTrackEvent(req: Request) {
       msg += `🌐 *Page:* \`${pageUrl}\``;
       msg += DASHBOARD_LINK;
 
-      sendTelegramAlert(msg);
+      await sendTelegramAlert(msg);
     } else {
       // Update session metrics
       session.exitPage = pageUrl || session.exitPage;
@@ -146,7 +146,7 @@ export async function processTrackEvent(req: Request) {
         msg += `📍 *Location:* ${location}\n`;
         msg += `💻 *Device:* ${device} (${browser})`;
         msg += DASHBOARD_LINK;
-        sendTelegramAlert(msg);
+        await sendTelegramAlert(msg);
       } else if (eventType === "CONTACT_SUBMIT") {
         let msg = `📩 *Contact Form Submitted!*\n\n`;
         if (eventData?.name) msg += `👤 *Name:* ${eventData.name}\n`;
@@ -154,13 +154,13 @@ export async function processTrackEvent(req: Request) {
         if (eventData?.company) msg += `🏢 *Company:* ${eventData.company}\n`;
         msg += `📍 *Location:* ${location}`;
         msg += DASHBOARD_LINK;
-        sendTelegramAlert(msg);
+        await sendTelegramAlert(msg);
       } else if (eventType === "GITHUB_CLICK") {
         let msg = `🐙 *GitHub Link Clicked*\n\n`;
         if (session.recruiterRef) msg += `🏢 *Company:* \`${session.recruiterRef}\`\n`;
         msg += `📍 *Location:* ${location}`;
         msg += DASHBOARD_LINK;
-        sendTelegramAlert(msg);
+        await sendTelegramAlert(msg);
       }
     }
 

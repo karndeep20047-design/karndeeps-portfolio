@@ -121,16 +121,13 @@ export function useTracker() {
         scrollDepth: scrollDepthRef.current,
       };
 
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(TRACKING_ENDPOINT, JSON.stringify(payload));
-      } else {
-        fetch(TRACKING_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          keepalive: true,
-        }).catch(() => {});
-      }
+      // Send immediately using fetch to eliminate sendBeacon queue delays
+      fetch(TRACKING_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).catch(() => {});
     };
 
     (window as any).__trackEvent = sendEvent;
