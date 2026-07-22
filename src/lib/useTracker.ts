@@ -178,6 +178,7 @@ export function trackEvent(eventType: EventPayload["eventType"], eventData?: Rec
 }
 
 function getBrowser(): string {
+  if (typeof navigator === "undefined") return "Browser";
   const ua = navigator.userAgent;
   if (ua.includes("Chrome") && !ua.includes("Edg")) return "Chrome";
   if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
@@ -187,24 +188,28 @@ function getBrowser(): string {
 }
 
 function getOS(): string {
+  if (typeof navigator === "undefined") return "OS";
   const ua = navigator.userAgent;
+  const hasTouch = typeof document !== "undefined" && "ontouchend" in document;
   if (ua.includes("Win")) return "Windows";
-  if (ua.includes("Mac") && !("ontouchend" in document)) return "macOS";
+  if (ua.includes("Mac") && !hasTouch) return "macOS";
   if (ua.includes("Linux") && !ua.includes("Android")) return "Linux";
   if (ua.includes("Android")) return "Android";
-  if (ua.includes("iPhone") || ua.includes("iPad") || (ua.includes("Mac") && "ontouchend" in document)) return "iOS";
+  if (ua.includes("iPhone") || ua.includes("iPad") || (ua.includes("Mac") && hasTouch)) return "iOS";
   return "OS";
 }
 
 function getDevice(): string {
+  if (typeof navigator === "undefined") return "Desktop";
   const ua = navigator.userAgent;
-  const isTouch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  const isTouch = typeof window !== "undefined" && ("ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0));
   const isSmallScreen = typeof window !== "undefined" && window.innerWidth <= 768;
+  const hasTouch = typeof document !== "undefined" && "ontouchend" in document;
 
   if (/mobile|iphone|ipod|android.*mobile|windows phone/i.test(ua) || (isTouch && isSmallScreen)) {
     return "Mobile";
   }
-  if (/ipad|tablet|android(?!.*mobile)/i.test(ua) || (ua.includes("Mac") && "ontouchend" in document)) {
+  if (/ipad|tablet|android(?!.*mobile)/i.test(ua) || (ua.includes("Mac") && hasTouch)) {
     return "Tablet";
   }
   return "Desktop";
