@@ -101,13 +101,14 @@ export async function processTrackEvent(req: Request) {
       }
     }
 
-    // Clean up city/region/country formatting
+    // Clean up city/region/country formatting for dashboard
     const locationParts = [city, region, country].filter(Boolean);
-    let location = locationParts.length > 0 ? locationParts.join(", ") : "Unknown Location";
+    const cleanLocation = locationParts.length > 0 ? locationParts.join(", ") : "Unknown Location";
 
+    let telegramLocation = cleanLocation;
     if (latitude && longitude) {
       const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-      location += ` ([📍 View Map](${mapsUrl}))`;
+      telegramLocation += ` ([📍 View Map](${mapsUrl}))`;
     }
 
     const now = Date.now();
@@ -130,7 +131,7 @@ export async function processTrackEvent(req: Request) {
         device: device || "Desktop",
         screenSize: screenSize || "",
         ip: clientIp,
-        location,
+        location: cleanLocation,
         durationSec: 0,
         maxScrollDepth: scrollDepth || 0,
         lastHeartbeat: now,
@@ -146,7 +147,7 @@ export async function processTrackEvent(req: Request) {
 
       if (jobTag) msg += `💼 *Job:* \`${jobTag}\`\n`;
       if (sourceTag) msg += `🔗 *Source:* \`${sourceTag}\`\n`;
-      msg += `📍 *Location:* ${location}\n`;
+      msg += `📍 *Location:* ${telegramLocation}\n`;
       msg += `📱 *Device:* ${device}\n`;
       msg += `🌐 *Browser:* ${browser} | *OS:* ${os}\n`;
       msg += `📄 *Page:* \`${pageUrl}\``;
@@ -176,8 +177,8 @@ export async function processTrackEvent(req: Request) {
       if (eventType === "CV_DOWNLOAD") {
         let msg = `📄 *CV Downloaded!*\n\n`;
         if (session.recruiterRef) msg += `🏢 *Company:* \`${session.recruiterRef}\`\n`;
-        msg += `📍 *Location:* ${location}\n`;
-        msg += `💻 *Device:* ${device} (${browser})`;
+        msg += `📍 *Location:* ${telegramLocation}\n`;
+        msg += `📱 *Device:* ${device} (${browser})`;
         msg += DASHBOARD_LINK;
         await sendTelegramAlert(msg);
       } else if (eventType === "CONTACT_SUBMIT") {
@@ -185,13 +186,13 @@ export async function processTrackEvent(req: Request) {
         if (eventData?.name) msg += `👤 *Name:* ${eventData.name}\n`;
         if (eventData?.email) msg += `📧 *Email:* ${eventData.email}\n`;
         if (eventData?.company) msg += `🏢 *Company:* ${eventData.company}\n`;
-        msg += `📍 *Location:* ${location}`;
+        msg += `📍 *Location:* ${telegramLocation}`;
         msg += DASHBOARD_LINK;
         await sendTelegramAlert(msg);
       } else if (eventType === "GITHUB_CLICK") {
         let msg = `🐙 *GitHub Link Clicked*\n\n`;
         if (session.recruiterRef) msg += `🏢 *Company:* \`${session.recruiterRef}\`\n`;
-        msg += `📍 *Location:* ${location}`;
+        msg += `📍 *Location:* ${telegramLocation}`;
         msg += DASHBOARD_LINK;
         await sendTelegramAlert(msg);
       }
