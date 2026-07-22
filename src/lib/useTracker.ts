@@ -183,22 +183,29 @@ function getBrowser(): string {
   if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
   if (ua.includes("Firefox")) return "Firefox";
   if (ua.includes("Edg")) return "Edge";
-  return "Other";
+  return "Browser";
 }
 
 function getOS(): string {
   const ua = navigator.userAgent;
   if (ua.includes("Win")) return "Windows";
-  if (ua.includes("Mac")) return "macOS";
-  if (ua.includes("Linux")) return "Linux";
+  if (ua.includes("Mac") && !("ontouchend" in document)) return "macOS";
+  if (ua.includes("Linux") && !ua.includes("Android")) return "Linux";
   if (ua.includes("Android")) return "Android";
-  if (ua.includes("iPhone") || ua.includes("iPad")) return "iOS";
-  return "Other";
+  if (ua.includes("iPhone") || ua.includes("iPad") || (ua.includes("Mac") && "ontouchend" in document)) return "iOS";
+  return "OS";
 }
 
 function getDevice(): string {
   const ua = navigator.userAgent;
-  if (/mobile/i.test(ua)) return "Mobile";
-  if (/ipad|tablet/i.test(ua)) return "Tablet";
+  const isTouch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  const isSmallScreen = typeof window !== "undefined" && window.innerWidth <= 768;
+
+  if (/mobile|iphone|ipod|android.*mobile|windows phone/i.test(ua) || (isTouch && isSmallScreen)) {
+    return "Mobile";
+  }
+  if (/ipad|tablet|android(?!.*mobile)/i.test(ua) || (ua.includes("Mac") && "ontouchend" in document)) {
+    return "Tablet";
+  }
   return "Desktop";
 }
