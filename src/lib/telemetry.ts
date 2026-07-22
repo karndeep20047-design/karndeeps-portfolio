@@ -139,8 +139,9 @@ export async function processTrackEvent(req: Request) {
       if (jobTag) msg += `💼 *Job:* \`${jobTag}\`\n`;
       if (sourceTag) msg += `🔗 *Source:* \`${sourceTag}\`\n`;
       msg += `📍 *Location:* ${location}\n`;
-      msg += `💻 *Device:* ${device} (${browser} on ${os})\n`;
-      msg += `🌐 *Page:* \`${pageUrl}\``;
+      msg += `📱 *Device:* ${device}\n`;
+      msg += `🌐 *Browser:* ${browser} | *OS:* ${os}\n`;
+      msg += `📄 *Page:* \`${pageUrl}\``;
       msg += DASHBOARD_LINK;
 
       await sendTelegramAlert(msg);

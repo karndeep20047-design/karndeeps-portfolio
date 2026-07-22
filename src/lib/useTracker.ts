@@ -196,18 +196,35 @@ function getOS(): string {
   return "OS";
 }
 
+function getDeviceModel(): string {
+  if (typeof navigator === "undefined") return "Device";
+  const ua = navigator.userAgent;
+  if (/iphone/i.test(ua)) return "iPhone";
+  if (/ipad/i.test(ua)) return "iPad";
+  if (/macintosh|mac os x/i.test(ua)) return "Mac";
+  if (/samsung/i.test(ua) || /sm-[a-z0-9]+/i.test(ua)) return "Samsung Galaxy";
+  if (/pixel/i.test(ua)) return "Google Pixel";
+  if (/huawei|honor/i.test(ua)) return "Huawei";
+  if (/oneplus/i.test(ua)) return "OnePlus";
+  if (/xiaomi|mi |redmi/i.test(ua)) return "Xiaomi";
+  if (/android/i.test(ua)) return "Android Phone";
+  if (/windows/i.test(ua)) return "Windows PC";
+  return "Computer";
+}
+
 function getDevice(): string {
   if (typeof navigator === "undefined") return "Desktop";
   const ua = navigator.userAgent;
   const isTouch = typeof window !== "undefined" && ("ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0));
   const isSmallScreen = typeof window !== "undefined" && window.innerWidth <= 768;
   const hasTouch = typeof document !== "undefined" && "ontouchend" in document;
+  const model = getDeviceModel();
 
   if (/mobile|iphone|ipod|android.*mobile|windows phone/i.test(ua) || (isTouch && isSmallScreen)) {
-    return "Mobile";
+    return `📱 Mobile (${model})`;
   }
   if (/ipad|tablet|android(?!.*mobile)/i.test(ua) || (ua.includes("Mac") && hasTouch)) {
-    return "Tablet";
+    return `tablet Tablet (${model})`;
   }
-  return "Desktop";
+  return `💻 Desktop (${model})`;
 }
