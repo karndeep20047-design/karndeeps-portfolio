@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { sessionsStore } from "@/lib/telemetry";
+import { sessionsStore, getFormattedDate } from "@/lib/telemetry";
 import { verifyAdminAuth } from "./login";
 
 export const Route = createFileRoute("/api/admin/analytics")({
@@ -14,28 +14,47 @@ export const Route = createFileRoute("/api/admin/analytics")({
           });
         }
 
+        const url = new URL(request.url);
+        const selectedDate = url.searchParams.get("date") || getFormattedDate(Date.now());
+
         const now = Date.now();
         const activeThreshold = 30000; // Active within last 30s
-        const sessions = Array.from(sessionsStore.values());
+        const allSessions = Array.from(sessionsStore.values());
 
-        // Calculate Overview Metrics
-        const totalVisitors = new Set(sessions.map((s) => s.visitorToken)).size;
-        const totalSessions = sessions.length;
-        const activeNow = sessions.filter((s) => now - s.lastHeartbeat <= activeThreshold).length;
+        // Extract available unique dates
+        const availableDates = Array.from(
+          new Set(allSessions.map((s) => getFormattedDate(s.createdAt)))
+        ).sort((a, b) => b.localeCompare(a));
 
-        const recruiterVisits = sessions.filter((s) => !!s.recruiterRef).length;
-        const cvDownloads = sessions.reduce(
+        if (!availableDates.includes(getFormattedDate(now))) {
+          availableDates.unshift(getFormattedDate(now));
+        }
+
+        // Filter sessions by date
+        const filteredSessions = allSessions.filter(
+          (s) => getFormattedDate(s.createdAt) === selectedDate
+        );
+
+        // Calculate Metrics for selected date
+        const totalVisitors = new Set(filteredSessions.map((s) => s.visitorToken)).size;
+        const totalSessions = filteredSessions.length;
+        const activeNow = allSessions.filter((s) => now - s.lastHeartbeat <= activeThreshold).length;
+
+        const recruiterVisits = filteredSessions.filter((s) => !!s.recruiterRef).length;
+        const cvDownloads = filteredSessions.reduce(
           (acc, s) => acc + s.events.filter((e) => e.eventType === "CV_DOWNLOAD").length,
           0
         );
 
         const avgDurationSec =
           totalSessions > 0
-            ? Math.round(sessions.reduce((acc, s) => acc + s.durationSec, 0) / totalSessions)
+            ? Math.round(filteredSessions.reduce((acc, s) => acc + s.durationSec, 0) / totalSessions)
             : 0;
 
         return new Response(
           JSON.stringify({
+            selectedDate,
+            availableDates,
             metrics: {
               totalVisitors,
               totalSessions,
@@ -44,7 +63,7 @@ export const Route = createFileRoute("/api/admin/analytics")({
               cvDownloads,
               avgDurationSec,
             },
-            sessions: sessions.reverse(),
+            sessions: filteredSessions.reverse(),
           }),
           {
             status: 200,

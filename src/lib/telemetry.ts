@@ -1,7 +1,5 @@
 import { sendTelegramAlert } from "@/lib/telegram";
 
-// In-memory telemetry cache for active sessions and event timelines
-// In production, database tables (PostgreSQL/Prisma/Supabase) persist these records permanently
 export interface SessionRecord {
   id: string;
   sessionKey: string;
@@ -32,7 +30,14 @@ export interface SessionRecord {
   notifiedSummary?: boolean;
 }
 
+// In-memory store + KV persistence fallback
 export const sessionsStore = new Map<string, SessionRecord>();
+
+// Helper to format YYYY-MM-DD
+export function getFormattedDate(timestamp: number): string {
+  const d = new Date(timestamp);
+  return d.toISOString().split("T")[0];
+}
 
 export async function processTrackEvent(req: Request) {
   try {

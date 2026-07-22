@@ -1,16 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import React, { useState, useEffect, Fragment } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Users,
   Activity,
   Briefcase,
   FileDown,
-  Clock,
-  Globe,
   ChevronDown,
   ChevronRight,
   Lock,
   RefreshCw,
+  Calendar,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/analytics")({
@@ -24,22 +23,27 @@ function AdminAnalytics() {
   const [loading, setLoading] = useState(false);
 
   const [data, setData] = useState<any>(null);
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
 
-  // Check auth on load by fetching analytics
+  // Check auth on load
   useEffect(() => {
     fetchAnalytics();
   }, []);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (dateToFetch?: string) => {
     try {
       setLoading(true);
-      const res = await fetch("/api/admin/analytics");
+      const queryDate = dateToFetch !== undefined ? dateToFetch : selectedDate;
+      const url = queryDate ? `/api/admin/analytics?date=${queryDate}` : "/api/admin/analytics";
+      
+      const res = await fetch(url);
       if (res.status === 401) {
         setIsAuthenticated(false);
       } else if (res.ok) {
         const json = await res.json();
         setData(json);
+        setSelectedDate(json.selectedDate);
         setIsAuthenticated(true);
       }
     } catch (err) {
@@ -47,6 +51,11 @@ function AdminAnalytics() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDateChange = (newDate: string) => {
+    setSelectedDate(newDate);
+    fetchAnalytics(newDate);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -129,6 +138,8 @@ function AdminAnalytics() {
 
   const metrics = data?.metrics || {};
   const sessions = data?.sessions || [];
+  const availableDates: string[] = data?.availableDates || [selectedDate];
+  const isToday = selectedDate === new Date().toISOString().split("T")[0];
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-12 text-foreground font-sans">
@@ -143,22 +154,41 @@ function AdminAnalytics() {
               Visitor & Recruiter Analytics
             </h1>
           </div>
-          <button
-            onClick={fetchAnalytics}
-            disabled={loading}
-            className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh Data
-          </button>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Date Filter Dropdown */}
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-mono">
+              <Calendar className="h-4 w-4 text-primary" />
+              <select
+                value={selectedDate}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className="bg-transparent text-foreground focus:outline-none cursor-pointer"
+              >
+                {availableDates.map((d) => (
+                  <option key={d} value={d} className="bg-background text-foreground">
+                    {d} {d === new Date().toISOString().split("T")[0] ? "(Today)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              onClick={() => fetchAnalytics()}
+              disabled={loading}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-medium transition-colors hover:bg-accent"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+            </button>
+          </div>
         </div>
 
         {/* Metrics Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-10">
           <MetricCard
-            title="Total Visitors"
+            title={isToday ? "Visitors Today" : `Visitors (${selectedDate})`}
             value={metrics.totalVisitors || 0}
             icon={Users}
-            subtitle={`${metrics.totalSessions || 0} Total Sessions`}
+            subtitle={`${metrics.totalSessions || 0} Sessions`}
           />
           <MetricCard
             title="Active Now"
@@ -183,8 +213,13 @@ function AdminAnalytics() {
 
         {/* Sessions Table */}
         <div className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xl">
-          <div className="border-b border-border/80 px-6 py-4">
-            <h2 className="font-display text-lg font-medium">Session History & Timelines</h2>
+          <div className="border-b border-border/80 px-6 py-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-medium">
+              Session History & Timelines ({selectedDate})
+            </h2>
+            <span className="font-mono text-xs text-muted-foreground">
+              Showing {sessions.length} session{sessions.length === 1 ? "" : "s"}
+            </span>
           </div>
 
           <div className="overflow-x-auto">
@@ -204,7 +239,7 @@ function AdminAnalytics() {
                 {sessions.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
-                      No visitor sessions recorded yet.
+                      No visitor sessions recorded for {selectedDate}.
                     </td>
                   </tr>
                 ) : (
