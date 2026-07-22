@@ -199,6 +199,13 @@ function getOS(): string {
 function getDeviceModel(): string {
   if (typeof navigator === "undefined") return "Device";
   const ua = navigator.userAgent;
+
+  // Extract Android Model (e.g., SM-G998B, Pixel 7, Redmi Note 11, etc.)
+  const androidMatch = ua.match(/;\s*([A-Za-z0-9\s\-_]+)\s+Build\//i);
+  if (androidMatch && androidMatch[1]) {
+    return androidMatch[1].trim();
+  }
+
   if (/iphone/i.test(ua)) return "iPhone";
   if (/ipad/i.test(ua)) return "iPad";
   if (/macintosh|mac os x/i.test(ua)) return "Mac";
@@ -207,7 +214,7 @@ function getDeviceModel(): string {
   if (/huawei|honor/i.test(ua)) return "Huawei";
   if (/oneplus/i.test(ua)) return "OnePlus";
   if (/xiaomi|mi |redmi/i.test(ua)) return "Xiaomi";
-  if (/android/i.test(ua)) return "Android Phone";
+  if (/android/i.test(ua)) return "Android Device";
   if (/windows/i.test(ua)) return "Windows PC";
   return "Computer";
 }

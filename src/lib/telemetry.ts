@@ -201,6 +201,7 @@ export async function processTrackEvent(req: Request) {
       if (jobTag) msg += `💼 *Job:* \`${jobTag}\`\n`;
       if (sourceTag) msg += `🔗 *Source:* \`${sourceTag}\`\n`;
       msg += `📍 *Location:* ${telegramLocation}\n`;
+      msg += `🌐 *IP Address:* \`${clientIp}\`\n`;
       msg += `📱 *Device:* ${device}\n`;
       msg += `🌐 *Browser:* ${browser} | *OS:* ${os}\n`;
       msg += `📄 *Page:* \`${pageUrl}\``;
