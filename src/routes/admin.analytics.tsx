@@ -10,6 +10,8 @@ import {
   Lock,
   RefreshCw,
   Calendar,
+  Clock,
+  Repeat,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/analytics")({
@@ -24,7 +26,7 @@ function AdminAnalytics() {
 
   const [data, setData] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
-  const [expandedSession, setExpandedSession] = useState<string | null>(null);
+  const [expandedVisitor, setExpandedVisitor] = useState<string | null>(null);
 
   // Check auth on load
   useEffect(() => {
@@ -36,7 +38,7 @@ function AdminAnalytics() {
       setLoading(true);
       const queryDate = dateToFetch !== undefined ? dateToFetch : selectedDate;
       const url = queryDate ? `/api/admin/analytics?date=${queryDate}` : "/api/admin/analytics";
-      
+
       const res = await fetch(url);
       if (res.status === 401) {
         setIsAuthenticated(false);
@@ -137,7 +139,7 @@ function AdminAnalytics() {
   }
 
   const metrics = data?.metrics || {};
-  const sessions = data?.sessions || [];
+  const groupedVisitors: any[] = data?.groupedVisitors || [];
   const availableDates: string[] = data?.availableDates || [selectedDate];
   const isToday = selectedDate === new Date().toISOString().split("T")[0];
 
@@ -185,10 +187,10 @@ function AdminAnalytics() {
         {/* Metrics Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-10">
           <MetricCard
-            title={isToday ? "Visitors Today" : `Visitors (${selectedDate})`}
+            title={isToday ? "Unique Visitors Today" : `Unique Visitors (${selectedDate})`}
             value={metrics.totalVisitors || 0}
             icon={Users}
-            subtitle={`${metrics.totalSessions || 0} Sessions`}
+            subtitle={`${metrics.totalSessions || 0} Total Visits`}
           />
           <MetricCard
             title="Active Now"
@@ -211,14 +213,19 @@ function AdminAnalytics() {
           />
         </div>
 
-        {/* Sessions Table */}
+        {/* Visitors & Companies Table */}
         <div className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xl">
           <div className="border-b border-border/80 px-6 py-4 flex items-center justify-between">
-            <h2 className="font-display text-lg font-medium">
-              Session History & Timelines ({selectedDate})
-            </h2>
+            <div>
+              <h2 className="font-display text-lg font-medium">
+                Visitor & Company History ({selectedDate})
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Ranked by latest activity. Repeating visits are merged cleanly.
+              </p>
+            </div>
             <span className="font-mono text-xs text-muted-foreground">
-              Showing {sessions.length} session{sessions.length === 1 ? "" : "s"}
+              {groupedVisitors.length} Unique Visitor{groupedVisitors.length === 1 ? "" : "s"}
             </span>
           </div>
 
@@ -226,29 +233,36 @@ function AdminAnalytics() {
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/40 font-mono text-xs uppercase tracking-wider text-muted-foreground border-b border-border/60">
                 <tr>
-                  <th className="px-6 py-3">Visitor / Ref</th>
+                  <th className="px-6 py-3">Visitor / Company</th>
                   <th className="px-6 py-3">Location</th>
                   <th className="px-6 py-3">Device / OS</th>
-                  <th className="px-6 py-3">Duration</th>
+                  <th className="px-6 py-3">Total Time Spent</th>
                   <th className="px-6 py-3">Max Scroll</th>
-                  <th className="px-6 py-3">Events</th>
-                  <th className="px-6 py-3">Time</th>
+                  <th className="px-6 py-3">Visits Count</th>
+                  <th className="px-6 py-3">Last Active</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60 font-mono text-xs">
-                {sessions.length === 0 ? (
+                {groupedVisitors.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
-                      No visitor sessions recorded for {selectedDate}.
+                      No visitor activity recorded for {selectedDate}.
                     </td>
                   </tr>
                 ) : (
-                  sessions.map((s: any) => {
-                    const isExpanded = expandedSession === s.id;
+                  groupedVisitors.map((v: any) => {
+                    const isExpanded = expandedVisitor === v.groupKey;
+                    const formatDuration = (sec: number) => {
+                      if (sec < 60) return `${sec}s`;
+                      const m = Math.floor(sec / 60);
+                      const s = sec % 60;
+                      return `${m}m ${s}s`;
+                    };
+
                     return (
-                      <React.Fragment key={s.id}>
+                      <React.Fragment key={v.groupKey}>
                         <tr
-                          onClick={() => setExpandedSession(isExpanded ? null : s.id)}
+                          onClick={() => setExpandedVisitor(isExpanded ? null : v.groupKey)}
                           className="cursor-pointer transition-colors hover:bg-muted/50"
                         >
                           <td className="px-6 py-4">
@@ -258,53 +272,84 @@ function AdminAnalytics() {
                               ) : (
                                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                               )}
-                              {s.recruiterRef ? (
-                                <span className="rounded-md bg-orange-500/10 px-2 py-1 font-semibold text-orange-500 border border-orange-500/20">
-                                  🏢 {s.recruiterRef}
+                              {v.recruiterRef ? (
+                                <span className="rounded-md bg-orange-500/10 px-2.5 py-1 font-semibold text-orange-500 border border-orange-500/20">
+                                  🏢 {v.recruiterRef}
                                 </span>
                               ) : (
-                                <span className="text-foreground">{s.visitorToken.substring(0, 10)}...</span>
+                                <span className="font-semibold text-foreground">
+                                  👤 {v.visitorToken.substring(0, 10)}...
+                                </span>
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-muted-foreground">{s.location}</td>
+                          <td className="px-6 py-4 text-muted-foreground">{v.location}</td>
                           <td className="px-6 py-4 text-muted-foreground">
-                            {s.device} ({s.browser})
+                            {v.device} ({v.browser})
                           </td>
-                          <td className="px-6 py-4 font-semibold text-foreground">{s.durationSec}s</td>
-                          <td className="px-6 py-4 text-muted-foreground">{s.maxScrollDepth}%</td>
+                          <td className="px-6 py-4 font-semibold text-primary">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5" />
+                              {formatDuration(v.totalDurationSec)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-muted-foreground">{v.maxScrollDepth}%</td>
                           <td className="px-6 py-4">
-                            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-semibold text-primary">
-                              {s.events.length} events
+                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 font-semibold text-primary">
+                              <Repeat className="h-3 w-3" />
+                              {v.sessionsCount} visit{v.sessionsCount > 1 ? "s" : ""}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-muted-foreground">
-                            {new Date(s.createdAt).toLocaleTimeString()}
+                            {new Date(v.lastActiveTime).toLocaleTimeString()}
                           </td>
                         </tr>
 
                         {isExpanded && (
                           <tr className="bg-muted/20">
                             <td colSpan={7} className="px-8 py-4">
-                              <div className="rounded-xl border border-border/80 bg-background p-4 space-y-2">
-                                <h4 className="font-sans font-semibold text-sm mb-3">
-                                  Session Replay Timeline Stream
+                              <div className="rounded-xl border border-border/80 bg-background p-4 space-y-4">
+                                <h4 className="font-sans font-semibold text-sm">
+                                  Session History & Timeline Stream for{" "}
+                                  {v.recruiterRef ? `Company (${v.recruiterRef})` : v.visitorToken}
                                 </h4>
-                                {s.events.map((e: any, idx: number) => (
+
+                                {v.sessions.map((session: any, sIdx: number) => (
                                   <div
-                                    key={idx}
-                                    className="flex items-center gap-3 text-xs border-l-2 border-primary/40 pl-3 py-1"
+                                    key={session.id || sIdx}
+                                    className="rounded-lg border border-border/60 bg-muted/30 p-3 space-y-2"
                                   >
-                                    <span className="text-muted-foreground">
-                                      {new Date(e.timestamp).toLocaleTimeString()}
-                                    </span>
-                                    <span className="font-semibold text-primary">{e.eventType}</span>
-                                    <span className="text-muted-foreground">Path: {e.pageUrl}</span>
-                                    {e.eventData && (
-                                      <span className="text-muted-foreground italic">
-                                        {JSON.stringify(e.eventData)}
+                                    <div className="flex items-center justify-between text-xs font-semibold text-foreground border-b border-border/40 pb-2">
+                                      <span>
+                                        Visit #{v.sessions.length - sIdx} — Started at{" "}
+                                        {new Date(session.createdAt).toLocaleTimeString()}
                                       </span>
-                                    )}
+                                      <span>Duration: {formatDuration(session.durationSec)}</span>
+                                    </div>
+
+                                    <div className="space-y-1 pl-2">
+                                      {session.events.map((e: any, idx: number) => (
+                                        <div
+                                          key={idx}
+                                          className="flex items-center gap-3 text-xs border-l-2 border-primary/40 pl-3 py-1"
+                                        >
+                                          <span className="text-muted-foreground">
+                                            {new Date(e.timestamp).toLocaleTimeString()}
+                                          </span>
+                                          <span className="font-semibold text-primary">
+                                            {e.eventType}
+                                          </span>
+                                          <span className="text-muted-foreground">
+                                            Path: {e.pageUrl}
+                                          </span>
+                                          {e.eventData && (
+                                            <span className="text-muted-foreground italic">
+                                              {JSON.stringify(e.eventData)}
+                                            </span>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
                                 ))}
                               </div>

@@ -35,8 +35,62 @@ export const Route = createFileRoute("/api/admin/analytics")({
           (s) => getFormattedDate(s.createdAt) === selectedDate
         );
 
-        // Calculate Metrics for selected date
-        const totalVisitors = new Set(filteredSessions.map((s) => s.visitorToken)).size;
+        // Group sessions by Visitor / Company (visitorToken or recruiterRef)
+        const groupedMap = new Map<string, {
+          groupKey: string;
+          recruiterRef?: string;
+          visitorToken: string;
+          location: string;
+          device: string;
+          browser: string;
+          os: string;
+          totalDurationSec: number;
+          maxScrollDepth: number;
+          lastActiveTime: number;
+          sessionsCount: number;
+          sessions: typeof filteredSessions;
+        }>();
+
+        for (const s of filteredSessions) {
+          const groupKey = s.recruiterRef ? `ref:${s.recruiterRef}` : `vis:${s.visitorToken}`;
+          let group = groupedMap.get(groupKey);
+
+          if (!group) {
+            group = {
+              groupKey,
+              recruiterRef: s.recruiterRef,
+              visitorToken: s.visitorToken,
+              location: s.location,
+              device: s.device,
+              browser: s.browser,
+              os: s.os,
+              totalDurationSec: 0,
+              maxScrollDepth: 0,
+              lastActiveTime: s.lastHeartbeat || s.createdAt,
+              sessionsCount: 0,
+              sessions: [],
+            };
+            groupedMap.set(groupKey, group);
+          }
+
+          group.totalDurationSec += s.durationSec;
+          group.sessionsCount += 1;
+          if (s.maxScrollDepth > group.maxScrollDepth) {
+            group.maxScrollDepth = s.maxScrollDepth;
+          }
+          if (s.lastHeartbeat > group.lastActiveTime) {
+            group.lastActiveTime = s.lastHeartbeat;
+          }
+          group.sessions.push(s);
+        }
+
+        // Sort grouped visitors: Most recently active visitor is pushed to TOP
+        const groupedVisitors = Array.from(groupedMap.values()).sort(
+          (a, b) => b.lastActiveTime - a.lastActiveTime
+        );
+
+        // Calculate Metrics
+        const totalVisitors = groupedVisitors.length;
         const totalSessions = filteredSessions.length;
         const activeNow = allSessions.filter((s) => now - s.lastHeartbeat <= activeThreshold).length;
 
@@ -63,7 +117,7 @@ export const Route = createFileRoute("/api/admin/analytics")({
               cvDownloads,
               avgDurationSec,
             },
-            sessions: filteredSessions.reverse(),
+            groupedVisitors,
           }),
           {
             status: 200,
